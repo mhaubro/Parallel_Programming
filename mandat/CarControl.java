@@ -1,4 +1,4 @@
-package origin;
+package mandat;
 //Prototype implementation of Car Control
 //Mandatory assignment
 //Course 02158 Concurrent Programming, DTU, Fall 2016

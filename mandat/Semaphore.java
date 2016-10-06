@@ -1,4 +1,4 @@
-package origin;
+package mandat;
 //Implementation of classical, Dijkstra Semaphore
 //Weakly Fair
 

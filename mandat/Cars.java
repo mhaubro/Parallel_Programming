@@ -1,4 +1,4 @@
-package origin;
+package mandat;
 //Implementation of Graphical User Interface class
 //Mandatory assignment
 //Course 02158 Concurrent Programming, DTU, Fall 2016

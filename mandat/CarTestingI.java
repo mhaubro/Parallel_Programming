@@ -1,4 +1,4 @@
-package origin;
+package mandat;
 //Specification of Car Testing interface 
 //Mandatory assignment
 //Course 02158 Concurrent Programming, DTU, Fall 2016
