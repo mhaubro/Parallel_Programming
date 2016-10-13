@@ -37,6 +37,9 @@ class Gate {
 }
 
 class Car extends Thread {
+	
+	static private Grid grid = new Grid();
+	static private Alley alley = new Alley();
 
     int basespeed = 100;             // Rather: degree of slowness
     int variation =  50;             // Percentage of base speed
@@ -129,6 +132,9 @@ class Car extends Thread {
                 	
                 newpos = nextPos(curpos);
                 
+                if (alley.isEntering(curpos, newpos)) alley.enter(no);
+                grid.enter(newpos);
+                
                 //  Move to new position 
                 cd.clear(curpos);
                 cd.mark(curpos,newpos,col,no);
@@ -136,7 +142,11 @@ class Car extends Thread {
                 cd.clear(curpos,newpos);
                 cd.mark(newpos,col,no);
 
+                Pos oldpos = curpos;
                 curpos = newpos;
+                if (alley.isLeaving(oldpos, curpos)) alley.leave(no);
+                grid.leave(oldpos);
+                
             }
 
         } catch (Exception e) {
