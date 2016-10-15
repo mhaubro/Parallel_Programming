@@ -4,9 +4,13 @@ import java.util.ArrayList;
 
 public class Alley {
 	
-	private boolean dirDown = false;
-	private int count = 0;
-	private Semaphore control = new Semaphore(1);
+	private boolean dir = false; // true if up, false if down.
+	private int count = 0; // how many cars in the alley.
+	
+	private Semaphore method_semaphore = new Semaphore(1);
+	private Semaphore is_empty = new Semaphore(1);
+	
+	// holds the layout of the alley, in the form of positions
 	private ArrayList<Pos> alley_positions = new ArrayList<Pos>();
 	
 	public Alley(){
@@ -18,33 +22,30 @@ public class Alley {
 		alley_positions.add(new Pos(1,2));
 	}
 	
-	private Semaphore alleySemaphore = new Semaphore(1);
-	
 	public void enter(int n) throws InterruptedException{
-		control.P();
-		if (goingDown(n)){
-			
+		method_semaphore.P(); // Enter critical region
+		
+		if (count <= 0){
+			dir = (n >= 5);
+			count++;
+		}else if (rightDir(n)){
+			count++;
 		}else{
-			
+			method_semaphore.V(); // leaving critical region
+			is_empty.P();
+			enter(n);
+			return;
 		}
-		control.V();
-		alleySemaphore.P();
+		method_semaphore.V(); // leave critical region
 	}
 	
 	public void leave(int n) throws InterruptedException{
-		alleySemaphore.V();
-	}
-	
-	private void goIn() throws InterruptedException{
-		control.P();
-		count++;
-		control.V();
-	}
-	
-	private void goOut() throws InterruptedException{
-		control.P();
+		method_semaphore.P(); // Enter critical region
 		count--;
-		control.V();
+		if (count < 1){
+			is_empty.V();
+		}
+		method_semaphore.V(); // leave critical region
 	}
 	
 	public boolean isEntering(Pos current, Pos next){
@@ -55,8 +56,8 @@ public class Alley {
 		return alley_positions.contains(current) && !alley_positions.contains(next);
 	}
 	
-	private boolean goingDown(int n){
-		return n < 5;
+	private boolean rightDir(int n){
+		return dir == (n >= 5);
 	}
 
 }
