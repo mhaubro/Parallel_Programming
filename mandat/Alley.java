@@ -4,9 +4,12 @@ import java.util.ArrayList;
 
 public class Alley {
 	
+	private final static int MAX_IN_DIR = 5;
+	
 	private boolean dir = false; // true if up, false if down.
 	private int count = 0; // how many cars in the alley.
 	private int waiting = 0;
+	private int since_last_dir = 0; // to guarentee the cars wont wait for too long.
 	
 	private Semaphore method_semaphore = new Semaphore(1);
 	private Semaphore is_empty = new Semaphore(1);
@@ -31,10 +34,12 @@ public class Alley {
 			if (count <= 0){
 				dir = (n >= 5);
 				count++;
+				since_last_dir++;
 				method_semaphore.V();
 				return;
-			}else if (rightDir(n)){
+			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR ){
 				count++;
+				since_last_dir++;
 				method_semaphore.V();
 				return;
 			}
@@ -54,6 +59,7 @@ public class Alley {
 		method_semaphore.P(); // Enter critical region
 		count--;
 		if (count < 1){
+			since_last_dir = 0;
 			is_empty.V();
 		}
 		method_semaphore.V(); // leave critical region
