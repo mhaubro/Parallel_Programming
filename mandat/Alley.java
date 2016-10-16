@@ -32,7 +32,7 @@ public class Alley {
 			
 			// if the alley is empty or the direction is the same, enter the alley.
 			if (count <= 0){
-				dir = (n >= 5);
+				dir = getDir(n); // set the direction to the cars direction.
 				count++;
 				since_last_dir++;
 				method_semaphore.V();
@@ -74,7 +74,10 @@ public class Alley {
 	}
 	
 	private boolean rightDir(int n){
-		return dir == (n >= 5);
+		return dir == getDir(n);
 	}
-
+	
+	private boolean getDir(int n){
+		return (n >= 5);
+	}
 }
