@@ -24,26 +24,30 @@ public class Alley {
 	}
 	
 	public void enter(int n) throws InterruptedException{
-		method_semaphore.P(); // Enter critical region
-		
-		if (count <= 0){
-			dir = (n >= 5);
-			count++;
-		}else if (rightDir(n)){
-			count++;
-		}else{
+		while (true){
+			method_semaphore.P(); // Enter critical region
+			
+			// if the alley is empty or the direction is the same, enter the alley.
+			if (count <= 0){
+				dir = (n >= 5);
+				count++;
+				method_semaphore.V();
+				return;
+			}else if (rightDir(n)){
+				count++;
+				method_semaphore.V();
+				return;
+			}
+			// Else wait until the alley is empty		
 			waiting++;
 			method_semaphore.V(); // leaving critical region
-			is_empty.P(); // wait until the alley is empty
-			method_semaphore.P();
+			is_empty.P(); // wait
+			method_semaphore.P(); // enter critical region
 			if (--waiting > 0){// if more than one is waiting, throw a coconut at the next.
 				is_empty.V();
 			}
-			method_semaphore.V(); // leave the critical region
-			enter(n); // retry the alley entry
-			return;
+			method_semaphore.V(); // yield
 		}
-		method_semaphore.V(); // leave critical region
 	}
 	
 	public void leave(int n) throws InterruptedException{
