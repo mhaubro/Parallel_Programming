@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Alley {
 	
-	private final static int MAX_IN_DIR = 5;
+	private final static int MAX_IN_DIR = 4;
 	
 	private boolean dir = false; // true if up, false if down.
 	private int count = 0; // how many cars in the alley.
