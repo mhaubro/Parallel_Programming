@@ -124,11 +124,16 @@ class Car extends Thread {
 
             while (true) { 
                 sleep(speed());
-  
+                
                 if (atGate(curpos)) { 
                     mygate.pass(); 
                     speed = chooseSpeed();
+                    
+                    // TODO implement atBarrier() function, and move the sync to it's own if-statement.
+                    CarControl.barrier.sync();
                 }
+                
+                
                 	
                 newpos = nextPos(curpos);
                 
@@ -159,6 +164,8 @@ class Car extends Thread {
 }
 
 public class CarControl implements CarControlI{
+	
+	static Barrier barrier = new Barrier(false);
 
     CarDisplayI cd;           // Reference to GUI
     Car[]  car;               // Cars
@@ -184,12 +191,12 @@ public class CarControl implements CarControlI{
         gate[no].close();
     }
 
-    public void barrierOn() { 
-        cd.println("Barrier On not implemented in this version");
+    public void barrierOn() {
+    	barrier.on();
     }
 
     public void barrierOff() { 
-        cd.println("Barrier Off not implemented in this version");
+        barrier.off();
     }
 
     public void barrierSet(int k) { 
