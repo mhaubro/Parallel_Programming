@@ -4,9 +4,17 @@ import java.util.ArrayList;
 
 public class Alley {
 	
-	private boolean dirDown = false;
-	private int count = 0;
-	private Semaphore control = new Semaphore(1);
+	private final static int MAX_IN_DIR = 4;
+	
+	private boolean dir = false; // true if up, false if down.
+	private int count = 0; // how many cars in the alley.
+	private int waiting = 0;
+	private int since_last_dir = 0; // to guarentee the cars wont wait for too long.
+	
+	private Semaphore method_semaphore = new Semaphore(1);
+	private Semaphore is_empty = new Semaphore(1);
+	
+	// holds the layout of the alley, in the form of positions
 	private ArrayList<Pos> alley_positions = new ArrayList<Pos>();
 	
 	public Alley(){
@@ -18,33 +26,43 @@ public class Alley {
 		alley_positions.add(new Pos(1,2));
 	}
 	
-	private Semaphore alleySemaphore = new Semaphore(1);
-	
 	public void enter(int n) throws InterruptedException{
-		control.P();
-		if (goingDown(n)){
+		while (true){
+			method_semaphore.P(); // Enter critical region
 			
-		}else{
-			
+			// if the alley is empty or the direction is the same, enter the alley.
+			if (count <= 0){
+				dir = getDir(n); // set the direction to the cars direction.
+				count++;
+				since_last_dir++;
+				method_semaphore.V();
+				return;
+			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR ){
+				count++;
+				since_last_dir++;
+				method_semaphore.V();
+				return;
+			}
+			// Else wait until the alley is empty		
+			waiting++;
+			method_semaphore.V(); // leaving critical region
+			is_empty.P(); // wait
+			method_semaphore.P(); // enter critical region
+			if (--waiting > 0){// if more than one is waiting, throw a coconut at the next.
+				is_empty.V();
+			}
+			method_semaphore.V(); // yield
 		}
-		control.V();
-		alleySemaphore.P();
 	}
 	
 	public void leave(int n) throws InterruptedException{
-		alleySemaphore.V();
-	}
-	
-	private void goIn() throws InterruptedException{
-		control.P();
-		count++;
-		control.V();
-	}
-	
-	private void goOut() throws InterruptedException{
-		control.P();
+		method_semaphore.P(); // Enter critical region
 		count--;
-		control.V();
+		if (count < 1){
+			since_last_dir = 0;
+			is_empty.V();
+		}
+		method_semaphore.V(); // leave critical region
 	}
 	
 	public boolean isEntering(Pos current, Pos next){
@@ -55,8 +73,11 @@ public class Alley {
 		return alley_positions.contains(current) && !alley_positions.contains(next);
 	}
 	
-	private boolean goingDown(int n){
-		return n < 5;
+	private boolean rightDir(int n){
+		return dir == getDir(n);
 	}
-
+	
+	private boolean getDir(int n){
+		return (n >= 5);
+	}
 }
