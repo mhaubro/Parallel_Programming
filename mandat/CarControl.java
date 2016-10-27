@@ -124,12 +124,16 @@ class Car extends Thread {
 
             while (true) { 
                 sleep(speed());
-  
+                
                 if (atGate(curpos)) { 
                     mygate.pass(); 
                     speed = chooseSpeed();
                 }
-                	
+                
+                if (CarControl.barrier.atBarrier(curpos, no)){
+                	CarControl.barrier.sync();
+                }
+                
                 newpos = nextPos(curpos);
                 
                 if (alley.isEntering(curpos, newpos)) alley.enter(no);
@@ -159,6 +163,8 @@ class Car extends Thread {
 }
 
 public class CarControl implements CarControlI{
+	
+	static Barrier barrier = new Barrier(false);
 
     CarDisplayI cd;           // Reference to GUI
     Car[]  car;               // Cars
@@ -184,19 +190,16 @@ public class CarControl implements CarControlI{
         gate[no].close();
     }
 
-    public void barrierOn() { 
-        cd.println("Barrier On not implemented in this version");
+    public void barrierOn() {
+    	barrier.on();
     }
 
     public void barrierOff() { 
-        cd.println("Barrier Off not implemented in this version");
+        barrier.off();
     }
 
     public void barrierSet(int k) { 
-        cd.println("Barrier threshold setting not implemented in this version");
-         // This sleep is for illustrating how blocking affects the GUI
-        // Remove when feature is properly implemented.
-        try { Thread.sleep(3000); } catch (InterruptedException e) { }
+        barrier.setThreshold(k);
      }
 
     public void removeCar(int no) { 
