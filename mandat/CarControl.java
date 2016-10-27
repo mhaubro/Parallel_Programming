@@ -128,13 +128,12 @@ class Car extends Thread {
                 if (atGate(curpos)) { 
                     mygate.pass(); 
                     speed = chooseSpeed();
-                    
-                    // TODO implement atBarrier() function, and move the sync to it's own if-statement.
-                    CarControl.barrier.sync();
                 }
                 
+                if (CarControl.barrier.atBarrier(curpos, no)){
+                	CarControl.barrier.sync();
+                }
                 
-                	
                 newpos = nextPos(curpos);
                 
                 if (alley.isEntering(curpos, newpos)) alley.enter(no);
@@ -200,10 +199,7 @@ public class CarControl implements CarControlI{
     }
 
     public void barrierSet(int k) { 
-        cd.println("Barrier threshold setting not implemented in this version");
-         // This sleep is for illustrating how blocking affects the GUI
-        // Remove when feature is properly implemented.
-        try { Thread.sleep(3000); } catch (InterruptedException e) { }
+        barrier.setThreshold(k);
      }
 
     public void removeCar(int no) { 

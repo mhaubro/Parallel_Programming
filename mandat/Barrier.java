@@ -2,7 +2,7 @@ package mandat;
 
 public class Barrier {
 	
-	private int threshold = 8;
+	private int threshold = 9;
 	
 	private boolean isOn;
 	
@@ -21,8 +21,10 @@ public class Barrier {
 			if (++waiting < threshold){
 				method.V();
 				wait.P();
-				method.P();
-				waiting--;
+				if (--waiting > 0){
+					wait.V();
+					method.P();
+				}
 			}else{
 				wait.V();
 				waiting--;
@@ -37,10 +39,27 @@ public class Barrier {
 	
 	public void off(){
 		isOn = false;
+		wait.V();
 	}
 	
-	public void atBarrier(Pos current, Pos next){
-		// TODO implement check, to se if the car is at the barrier.
+	public boolean atBarrier(Pos current, int N){
+		
+		// checks if the x-coordinate is within the barrier.
+		if (current.col < 3)
+			return false;
+		
+		if (N < 5){ // cars going up
+			if (current.row == 6)
+				return true;
+		}else{ // cars going down
+			if (current.row == 5)
+				return true;
+		}
+		return false;
+	}
+	
+	public void setThreshold(int k) {
+		this.threshold = k;
 	}
 
 }
