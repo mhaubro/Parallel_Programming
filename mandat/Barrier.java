@@ -2,6 +2,8 @@ package mandat;
 
 public class Barrier {
 	
+	private CarDisplayI display;
+	
 	private int threshold = 9;
 	
 	private boolean isOn;
@@ -11,33 +13,45 @@ public class Barrier {
 	
 	private Semaphore method = new Semaphore(1);
 	
-	public Barrier(boolean isOn){
+	public Barrier(boolean isOn, CarDisplayI display){
 		this.isOn = isOn;
+		this.display = display;
 	}
 	
 	public void sync() throws InterruptedException{
+		method.P();
 		if (isOn){
-			method.P();
 			if (++waiting < threshold){
 				method.V();
-				wait.P();
-				if (--waiting > 0){
+				wait.P();//enter the critical region. and notify all who is waiting
+				waiting--;
+				if (waiting > 0){
 					wait.V();
-					method.P();
+					return;
+				}else{
+					//Thread.sleep(100);
+					display.println("bob");
+					display.println("Barrier: All notified.");
+					method.V();
+					return;
 				}
 			}else{
-				wait.V();
 				waiting--;
+				wait.V();
+				return;
 			}
-			method.V();
 		}
+		method.V();
 	}
 	
-	public void on(){
+	public void on() throws InterruptedException{
+		method.P();
 		isOn = true;
+		method.V();
 	}
 	
-	public void off(){
+	public void off() throws InterruptedException{
+		method.P();
 		isOn = false;
 		wait.V();
 	}
@@ -58,8 +72,16 @@ public class Barrier {
 		return false;
 	}
 	
-	public void setThreshold(int k) {
+	public void setThreshold(int k) throws InterruptedException {
+		method.P();
 		this.threshold = k;
+		if (waiting >= k){
+			wait.V();
+		}else{
+			method.V();
+		}
+		
+		
 	}
 
 }

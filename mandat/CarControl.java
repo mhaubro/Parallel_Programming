@@ -41,8 +41,8 @@ class Car extends Thread {
 	static private Grid grid = new Grid();
 	static private Alley alley = new Alley();
 
-    int basespeed = 100/4;             // Rather: degree of slowness
-    int variation =  50/4;             // Percentage of base speed
+    int basespeed = 100;             // Rather: degree of slowness
+    int variation =  50;             // Percentage of base speed
 
     CarDisplayI cd;                  // GUI part
 
@@ -132,6 +132,7 @@ class Car extends Thread {
                 
                 if (CarControl.barrier.atBarrier(curpos, no)){
                 	CarControl.barrier.sync();
+                	cd.println("Car " + no + " pass.");
                 }
                 
                 newpos = nextPos(curpos);
@@ -163,15 +164,15 @@ class Car extends Thread {
 }
 
 public class CarControl implements CarControlI{
-	
-	static Barrier barrier = new Barrier(false);
 
+	static Barrier barrier;
     CarDisplayI cd;           // Reference to GUI
     Car[]  car;               // Cars
     Gate[] gate;              // Gates
 
     public CarControl(CarDisplayI cd) {
         this.cd = cd;
+        barrier = new Barrier(false,cd);
         car  = new  Car[9];
         gate = new Gate[9];
 
@@ -191,15 +192,39 @@ public class CarControl implements CarControlI{
     }
 
     public void barrierOn() {
-    	barrier.on();
+    	boolean done = false;
+    	while(!done){
+    		try {
+				barrier.on();
+				done = true;
+			} catch (InterruptedException e) {
+				System.err.println("Barrier set on interrupted. trying again.");
+			}
+    	}
     }
 
     public void barrierOff() { 
-        barrier.off();
+    	boolean done = false;
+    	while(!done){
+    		try {
+				barrier.off();
+				done = true;
+			} catch (InterruptedException e) {
+				System.err.println("Barrier set threshold interrupted. trying again.");
+			}
+    	}
     }
 
-    public void barrierSet(int k) { 
-        barrier.setThreshold(k);
+    public void barrierSet(int k) {
+    	boolean done = false;
+    	while(!done){
+    		try {
+				barrier.setThreshold(k);
+				done = true;
+			} catch (InterruptedException e) {
+				System.err.println("Barrier set threshold interrupted. trying again.");
+			}
+    	}
      }
 
     public void removeCar(int no) { 
