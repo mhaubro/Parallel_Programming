@@ -30,7 +30,6 @@ public class Barrier {
 					return;
 				}else{
 					//Thread.sleep(100);
-					display.println("bob");
 					display.println("Barrier: All notified.");
 					method.V();
 					return;
