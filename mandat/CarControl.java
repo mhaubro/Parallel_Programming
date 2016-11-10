@@ -38,14 +38,14 @@ class Gate {
 
 class Car extends Thread {
 	
+    CarDisplayI cd;                  // GUI part
+	
 	static private Grid grid = new Grid();
 	//static private AlleyMonitor alley = new AlleyMonitor();
-	static private Alley alley = new Alley();
+	static private Alley alley;
 
-    int basespeed = 100/4;             // Rather: degree of slowness
-    int variation =  50/4;             // Percentage of base speed
-
-    CarDisplayI cd;                  // GUI part
+    int basespeed = 100/8;             // Rather: degree of slowness
+    int variation =  50/8;             // Percentage of base speed
 
     int no;                          // Car number
     Pos startpos;                    // Startpositon (provided by GUI)
@@ -59,6 +59,8 @@ class Car extends Thread {
     Pos newpos;                      // New position to go to
 
     public Car(int no, CarDisplayI cd, Gate g) {
+    	
+    	alley = new Alley(cd);
 
         this.no = no;
         this.cd = cd;
@@ -133,7 +135,7 @@ class Car extends Thread {
                 
                 if (CarControl.barrier.atBarrier(curpos, no)){
                 	CarControl.barrier.sync();
-                	cd.println("Car " + no + " pass.");
+                	//cd.println("Car " + no + " pass.");
                 }
                 
                 newpos = nextPos(curpos);

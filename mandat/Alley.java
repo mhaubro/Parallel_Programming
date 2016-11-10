@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public class Alley {
 	
+	private CarDisplayI display;
+	
 	private final static int MAX_IN_DIR = 4;
 	
 	private boolean dir = false; // true if up, false if down.
@@ -12,12 +14,13 @@ public class Alley {
 	private int since_last_dir = 0; // to guarentee the cars wont wait for too long.
 	
 	private Semaphore method_semaphore = new Semaphore(1);
-	private Semaphore is_empty = new Semaphore(1);
+	private Semaphore is_empty = new Semaphore(0);
 	
 	// holds the layout of the alley, in the form of positions
 	private ArrayList<Pos> alley_positions = new ArrayList<Pos>();
 	
-	public Alley(){
+	public Alley(CarDisplayI display){
+		this.display = display;
 		//define alley positions
 		for (int i = 1; i <= 10; i++){
 			alley_positions.add(new Pos(i,0));
@@ -28,8 +31,10 @@ public class Alley {
 	
 	public void enter(int n) throws InterruptedException{
 		while (true){
+			//display.println("m enter");
 			method_semaphore.P();
 			if (count < 1){
+				since_last_dir = 0;
 				dir = getDir(n);
 				break; // enter the alley
 			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR){
@@ -37,7 +42,9 @@ public class Alley {
 			}
 			waiting++;
 			method_semaphore.V();
+			//display.println("e enter");
 			is_empty.P();
+			
 			waiting--;
 			if (waiting > 0){
 				is_empty.V();
@@ -51,10 +58,10 @@ public class Alley {
 	}
 	
 	public void leave(int n) throws InterruptedException{
+		//display.println("m leave");
 		method_semaphore.P(); // Enter critical region
 		count--;
-		if (count < 1){
-			since_last_dir = 0;
+		if (count < 1 && waiting > 0){
 			is_empty.V();
 		}else{
 			method_semaphore.V(); // leave critical region

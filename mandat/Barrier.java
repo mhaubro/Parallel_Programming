@@ -5,6 +5,7 @@ public class Barrier {
 	private CarDisplayI display;
 	
 	private int threshold = 9;
+	private boolean threshold_change = false;
 	
 	private boolean isOn;
 	
@@ -25,7 +26,7 @@ public class Barrier {
 				method.V();
 				wait.P();//enter the critical region. and notify all who is waiting
 				waiting--;
-				if (waiting > 0){
+				if (waiting > 0 || threshold_change){
 					wait.V();
 					return;
 				}else{
@@ -72,15 +73,15 @@ public class Barrier {
 	}
 	
 	public void setThreshold(int k) throws InterruptedException {
-		method.P();
-		this.threshold = k;
-		if (waiting >= k){
+		threshold_change = true;
+		wait.P();
+		threshold_change = false;
+		threshold = k;
+		if (waiting > 0){
 			wait.V();
 		}else{
 			method.V();
 		}
-		
-		
 	}
 
 }
