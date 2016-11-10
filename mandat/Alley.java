@@ -28,31 +28,26 @@ public class Alley {
 	
 	public void enter(int n) throws InterruptedException{
 		while (true){
-			method_semaphore.P(); // Enter critical region
-			
-			// if the alley is empty or the direction is the same, enter the alley.
-			if (count <= 0){
-				dir = getDir(n); // set the direction to the cars direction.
-				count++;
-				since_last_dir++;
-				method_semaphore.V();
-				return;
-			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR ){
-				count++;
-				since_last_dir++;
-				method_semaphore.V();
-				return;
+			method_semaphore.P();
+			if (count < 1){
+				dir = getDir(n);
+				break; // enter the alley
+			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR){
+				break; // enter the alley
 			}
-			// Else wait until the alley is empty		
 			waiting++;
-			method_semaphore.V(); // leaving critical region
-			is_empty.P(); // wait
-			method_semaphore.P(); // enter critical region
-			if (--waiting > 0){// if more than one is waiting, throw a coconut at the next.
+			method_semaphore.V();
+			is_empty.P();
+			waiting--;
+			if (waiting > 0){
 				is_empty.V();
+			}else{
+				method_semaphore.V();
 			}
-			method_semaphore.V(); // yield
 		}
+		count++;
+		since_last_dir++;
+		method_semaphore.V();
 	}
 	
 	public void leave(int n) throws InterruptedException{
@@ -61,8 +56,9 @@ public class Alley {
 		if (count < 1){
 			since_last_dir = 0;
 			is_empty.V();
+		}else{
+			method_semaphore.V(); // leave critical region
 		}
-		method_semaphore.V(); // leave critical region
 	}
 	
 	public boolean isEntering(Pos current, Pos next){

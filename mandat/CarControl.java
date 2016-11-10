@@ -39,10 +39,11 @@ class Gate {
 class Car extends Thread {
 	
 	static private Grid grid = new Grid();
-	static private AlleyMonitor alley = new AlleyMonitor();
+	//static private AlleyMonitor alley = new AlleyMonitor();
+	static private Alley alley = new Alley();
 
-    int basespeed = 100/2;             // Rather: degree of slowness
-    int variation =  50/2;             // Percentage of base speed
+    int basespeed = 100/4;             // Rather: degree of slowness
+    int variation =  50/4;             // Percentage of base speed
 
     CarDisplayI cd;                  // GUI part
 
