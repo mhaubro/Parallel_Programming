@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public class Alley {
 	
+	private CarDisplayI display;
+	
 	private final static int MAX_IN_DIR = 4;
 	
 	private boolean dir = false; // true if up, false if down.
@@ -12,12 +14,13 @@ public class Alley {
 	private int since_last_dir = 0; // to guarentee the cars wont wait for too long.
 	
 	private Semaphore method_semaphore = new Semaphore(1);
-	private Semaphore is_empty = new Semaphore(1);
+	private Semaphore is_empty = new Semaphore(0);
 	
 	// holds the layout of the alley, in the form of positions
 	private ArrayList<Pos> alley_positions = new ArrayList<Pos>();
 	
-	public Alley(){
+	public Alley(CarDisplayI display){
+		this.display = display;
 		//define alley positions
 		for (int i = 1; i <= 10; i++){
 			alley_positions.add(new Pos(i,0));
@@ -28,41 +31,41 @@ public class Alley {
 	
 	public void enter(int n) throws InterruptedException{
 		while (true){
-			method_semaphore.P(); // Enter critical region
-			
-			// if the alley is empty or the direction is the same, enter the alley.
-			if (count <= 0){
-				dir = getDir(n); // set the direction to the cars direction.
-				count++;
-				since_last_dir++;
-				method_semaphore.V();
-				return;
-			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR ){
-				count++;
-				since_last_dir++;
-				method_semaphore.V();
-				return;
+			//display.println("m enter");
+			method_semaphore.P();
+			if (count < 1){
+				since_last_dir = 0;
+				dir = getDir(n);
+				break; // enter the alley
+			}else if (rightDir(n) && since_last_dir < MAX_IN_DIR){
+				break; // enter the alley
 			}
-			// Else wait until the alley is empty		
 			waiting++;
-			method_semaphore.V(); // leaving critical region
-			is_empty.P(); // wait
-			method_semaphore.P(); // enter critical region
-			if (--waiting > 0){// if more than one is waiting, throw a coconut at the next.
+			method_semaphore.V();
+			//display.println("e enter");
+			is_empty.P();
+			
+			waiting--;
+			if (waiting > 0){
 				is_empty.V();
+			}else{
+				method_semaphore.V();
 			}
-			method_semaphore.V(); // yield
 		}
+		count++;
+		since_last_dir++;
+		method_semaphore.V();
 	}
 	
 	public void leave(int n) throws InterruptedException{
+		//display.println("m leave");
 		method_semaphore.P(); // Enter critical region
 		count--;
-		if (count < 1){
-			since_last_dir = 0;
+		if (count < 1 && waiting > 0){
 			is_empty.V();
+		}else{
+			method_semaphore.V(); // leave critical region
 		}
-		method_semaphore.V(); // leave critical region
 	}
 	
 	public boolean isEntering(Pos current, Pos next){
