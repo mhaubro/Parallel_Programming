@@ -19,8 +19,4 @@ public class Grid {
 	public void leave(Pos pos){
 		sema[pos.row][pos.col].V();
 	}
-	
-	public void remove(){
-		
-	}
 }

@@ -2,8 +2,8 @@ package mandat;
 
 public class AlleySemaphore extends Alley {
 
-	public AlleySemaphore(CarDisplayI display) {
-		super(display);
+	public AlleySemaphore() {
+		super();
 	}
 
 	private int count = 0; // how many cars in the alley.
@@ -28,14 +28,6 @@ public class AlleySemaphore extends Alley {
 		 */
 		while (true) {
 			method_semaphore.P();
-
-			// if the car is set to be repaired, it will exit the method with
-			// false to signal that entering was not a succes.
-			if (repair[n]) {
-				repair[n] = false;
-				method_semaphore.V();
-				return;
-			}
 
 			// checks if the car can enter the alley, by breaking the
 			// waiting-loop
@@ -84,16 +76,6 @@ public class AlleySemaphore extends Alley {
 			is_empty.V();
 		} else {
 			method_semaphore.V(); // leave critical region
-		}
-	}
-
-	public void remove(int n) throws InterruptedException {
-		method_semaphore.P();
-		repair[n] = true;
-		if (waiting > 0) {
-			is_empty.V();
-		} else {
-			method_semaphore.V();
 		}
 	}
 

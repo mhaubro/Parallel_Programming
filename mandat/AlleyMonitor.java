@@ -1,16 +1,16 @@
 package mandat;
 
-public class AlleyMonitor extends Alley{
+public class AlleyMonitor extends Alley {
 
-	public AlleyMonitor(CarDisplayI display) {
-		super(display);
+	public AlleyMonitor() {
+		super();
 	}
 
+	// to improve the fairness of the alley. but still not completely fair
+	private int since_last_dir = 0;
 	private final static int MAX_IN_DIR = 4;
 
 	private int count = 0;
-	private int since_last_dir = 0; // to guarentee the cars wont wait for too
-									// long.
 
 	public synchronized void enter(int n) throws InterruptedException {
 		while (true) {

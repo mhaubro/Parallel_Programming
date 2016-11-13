@@ -59,9 +59,8 @@ class Car extends Thread {
 	CarDisplayI cd; // GUI part
 
 	static private Grid grid = new Grid();
-	
-	static private AlleyMonitor alley;//Outcomment this and make line below runable if it's the alley-semaphore solution that should be run.
-	// static private AlleySemaphore alley;
+
+	static private Alley alley;
 
 	int basespeed = 100; // Rather: degree of slowness
 	int variation = 50; // Percentage of base speed
@@ -79,8 +78,8 @@ class Car extends Thread {
 	boolean alive = true;
 
 	boolean isMoving = false;
-	
-	public Car(int no, CarDisplayI cd, Gate g, /*AlleySemaphore*/ AlleyMonitor a) {//AlleySemaphore vs. Monitor can be changed by editing comment.
+
+	public Car(int no, CarDisplayI cd, Gate g, Alley a) {
 
 		alley = a;
 
@@ -159,37 +158,45 @@ class Car extends Thread {
 			while (true) {
 
 				synchronized (this) {
-					while (!alive) {//Waits while the car is being "Repaired". 
+					while (!alive) {// Waits while the car is being "Repaired".
 						this.wait();
 					}
 
 					try {
 
-						sleep(speed());// May throw interruptedexception, will check for interrupts
+						sleep(speed());// May throw interruptedexception, will
+										// check for interrupts
 
-						//Exits the gate, if the gate is open.
+						// Exits the gate, if the gate is open.
 						if (atGate(curpos)) {
-							mygate.pass();// May check for interrupts, and may throw an interruptedexception
+							mygate.pass();// May check for interrupts, and may
+											// throw an interruptedexception
 							speed = chooseSpeed();
 						}
 
-						//Synchronizes with the barrier. This functionality is not working with car repairs.
+						// Synchronizes with the barrier. This functionality is
+						// not working with car repairs.
 						if (CarControl.barrier.atBarrier(curpos, no)) {
-							CarControl.barrier.sync();// May check for interrupts, and may throw an interruptedexception
+							CarControl.barrier.sync();// May check for
+														// interrupts, and may
+														// throw an
+														// interruptedexception
 						}
 
-						
 						newpos = nextPos(curpos);
 
-						//Enters the alley, if the alley is to be entered.
+						// Enters the alley, if the alley is to be entered.
 						if (alley.isEntering(curpos, newpos)) {
-							alley.enter(no);// May check for interrupts, and may throw an interruptedexception
+							alley.enter(no);// May check for interrupts, and may
+											// throw an interruptedexception
 						}
 
-						grid.enter(newpos);// May check for interrupts, and may throw an interruptedexception
-						
-						//If the code has reached thus far, the car will "move" on the grid and display
-						//Therefore, the car is between grids.
+						grid.enter(newpos);// May check for interrupts, and may
+											// throw an interruptedexception
+
+						// If the code has reached thus far, the car will "move"
+						// on the grid and display
+						// Therefore, the car is between grids.
 						isMoving = true;
 
 						// Move to new position
@@ -197,36 +204,45 @@ class Car extends Thread {
 						cd.mark(curpos, newpos, col, no);
 						sleep(speed());// Checks for interrupts. If the thread
 										// survives this, it survives an
-										// iteration in the loop, since no command after in the loop can throw an interruptedexception
+										// iteration in the loop, since no
+										// command after in the loop can throw
+										// an interruptedexception
 
-						//The car will move. See comment above for sleep(speed);
+						// The car will move. See comment above for
+						// sleep(speed);
 						isMoving = false;
-						
-						//Draws the car
+
+						// Draws the car
 						cd.clear(curpos, newpos);
 						cd.mark(newpos, col, no);
 
-						//Sets the position
+						// Sets the position
 						Pos oldpos = curpos;
 						curpos = newpos;
-						
-						//Leaves the alley
+
+						// Leaves the alley
 						if (alley.isLeaving(oldpos, curpos)) {
 
 							alley.leave(no);
 						}
 						grid.leave(oldpos);
 
-					} catch (InterruptedException e) {// There's been an
-														// interrupt. It is assumed that when there is an interrupt, the thread
-													//Has to fix itself, but become inactive. So the assumption is, that all
-													//Interrupts are deactivations of cars.
-													//Is an interrupt thrown while a car is inactive, it is NOT catched,
-													//Since it must be an error, and not a deactivation.
+					} catch (InterruptedException e) {
+						// There's been an interrupt. It is assumed that when
+						// there is an interrupt, the thread Has to fix itself,
+						// but become inactive. So the assumption is, that all
+						// Interrupts are deactivations of cars. Is an interrupt
+						// thrown while a car is
+						// inactive, it is NOT
+						// catched,
+						// Since it must be an
+						// error, and not a
+						// deactivation.
 						if (alive) {
-							repair(isMoving);
+							repair();
 						} else {
-							throw new InterruptedException();//An error ocurred.
+							throw new InterruptedException();// An error
+																// ocurred.
 						}
 						cd.println("Terminates thread " + no);
 					}
@@ -240,20 +256,17 @@ class Car extends Thread {
 		}
 	}
 
-	void checkInterrupts() throws InterruptedException {
-		if (!Thread.currentThread().isInterrupted()) {// Checks if theres been
-														// placed an
-														// interruptFlag
-			throw new InterruptedException();
-		}
-	}
-
-	void repair(boolean isMoving2) {
+	/**
+	 * 
+	 * @param isMoving2
+	 * @throws InterruptedException
+	 */
+	void repair() throws InterruptedException {
 		alive = false;
 		grid.leave(curpos);// Leaves the grid
 
 		if (isMoving) {// Is in two grid locations, curpos and
-										// newpos
+						// newpos
 			grid.leave(newpos);
 			cd.clear(curpos, newpos);
 		} else {
@@ -261,6 +274,8 @@ class Car extends Thread {
 		}
 
 		if (alley.isInAlley(curpos)) {
+			// alley.leave() can only throw an Interupted exception if it's an
+			// AlleySemaphore
 			alley.leave(no);
 		}
 
@@ -268,11 +283,6 @@ class Car extends Thread {
 		curpos = startpos;
 	}
 
-	/**
-	 * removes a car
-	 * 
-	 * @throws InterruptedException
-	 */
 }
 
 public class CarControl implements CarControlI {
@@ -281,14 +291,15 @@ public class CarControl implements CarControlI {
 	CarDisplayI cd; // Reference to GUI
 	Car[] car; // Cars
 	Gate[] gate; // Gates
-	AlleyMonitor a;
+	Alley a;
 
 	public CarControl(CarDisplayI cd) {
 		this.cd = cd;
 		barrier = new Barrier(false, cd);
 		car = new Car[9];
 		gate = new Gate[9];
-		a = new AlleyMonitor(cd);
+		a = new AlleyMonitor();
+		// a = new AlleySemaphore();
 
 		for (int no = 0; no < 9; no++) {
 			gate[no] = new Gate();
@@ -343,7 +354,7 @@ public class CarControl implements CarControlI {
 
 	public void removeCar(int no) {
 		if (car[no].alive) {
-			car[no].interrupt();//This will only work with AlleyMonitor
+			car[no].interrupt();// This will only work with AlleyMonitor
 			cd.println("Repairing car no " + no);
 		} else {
 			cd.println("Car no: " + no + " already out for repair");
