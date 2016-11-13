@@ -159,38 +159,37 @@ class Car extends Thread {
 			while (true) {
 
 				synchronized (this) {
-					while (!alive) {
-						cd.println("Waiting");
+					while (!alive) {//Waits while the car is being "Repaired". 
 						this.wait();
-						cd.println("Waking up");
 					}
 
 					try {
 
-						sleep(speed());// May throw interruptedexception
+						sleep(speed());// May throw interruptedexception, will check for interrupts
 
+						//Exits the gate, if the gate is open.
 						if (atGate(curpos)) {
-							mygate.pass();// May throw exception
+							mygate.pass();// May check for interrupts, and may throw an interruptedexception
 							speed = chooseSpeed();
 						}
 
-
+						//Synchronizes with the barrier. This functionality is not working with car repairs.
 						if (CarControl.barrier.atBarrier(curpos, no)) {
-							CarControl.barrier.sync();// Checks for
-														// interrupts.//May wait
-							// cd.println("Car " + no + " pass.");
+							CarControl.barrier.sync();// May check for interrupts, and may throw an interruptedexception
 						}
 
+						
 						newpos = nextPos(curpos);
 
+						//Enters the alley, if the alley is to be entered.
 						if (alley.isEntering(curpos, newpos)) {
-							alley.enter(no);// May check for interrupts.//May
-											// wait
+							alley.enter(no);// May check for interrupts, and may throw an interruptedexception
 						}
 
-						cd.println("Entering grid");
-						grid.enter(newpos);// May check for interrupts.//May
-											// wait
+						grid.enter(newpos);// May check for interrupts, and may throw an interruptedexception
+						
+						//If the code has reached thus far, the car will "move" on the grid and display
+						//Therefore, the car is between grids.
 						isMoving = true;
 
 						// Move to new position
@@ -198,29 +197,36 @@ class Car extends Thread {
 						cd.mark(curpos, newpos, col, no);
 						sleep(speed());// Checks for interrupts. If the thread
 										// survives this, it survives an
-										// iteration
+										// iteration in the loop, since no command after in the loop can throw an interruptedexception
 
+						//The car will move. See comment above for sleep(speed);
 						isMoving = false;
 						
+						//Draws the car
 						cd.clear(curpos, newpos);
 						cd.mark(newpos, col, no);
 
+						//Sets the position
 						Pos oldpos = curpos;
 						curpos = newpos;
-						if (alley.isLeaving(oldpos, curpos)) {// Does not check
-																// for
-																// interrupts,
-																// no semaphores
-							alley.leave(no);// Does not check for interrupts, no
-											// semaphores
+						
+						//Leaves the alley
+						if (alley.isLeaving(oldpos, curpos)) {
+
+							alley.leave(no);
 						}
-						grid.leave(oldpos);// Does not check for interrupts, no
-											// semaphores
+						grid.leave(oldpos);
 
 					} catch (InterruptedException e) {// There's been an
-														// interrupt
+														// interrupt. It is assumed that when there is an interrupt, the thread
+													//Has to fix itself, but become inactive. So the assumption is, that all
+													//Interrupts are deactivations of cars.
+													//Is an interrupt thrown while a car is inactive, it is NOT catched,
+													//Since it must be an error, and not a deactivation.
 						if (alive) {
 							repair(isMoving);
+						} else {
+							throw new InterruptedException();//An error ocurred.
 						}
 						cd.println("Terminates thread " + no);
 					}
@@ -245,7 +251,6 @@ class Car extends Thread {
 	void repair(boolean isMoving2) {
 		alive = false;
 		grid.leave(curpos);// Leaves the grid
-		cd.println("Count: " + alley.getCount());
 
 		if (isMoving) {// Is in two grid locations, curpos and
 										// newpos
@@ -257,7 +262,6 @@ class Car extends Thread {
 
 		if (alley.isInAlley(curpos)) {
 			alley.leave(no);
-			cd.println("In Alley");
 		}
 
 		// Resets car to start position
@@ -269,34 +273,6 @@ class Car extends Thread {
 	 * 
 	 * @throws InterruptedException
 	 */
-	// synchronized void remove() throws InterruptedException {
-	// if (repair) {
-	// return;
-	// }
-	// if (curpos == newpos) {
-	// grid.leave(curpos);
-	// cd.clear(curpos);
-	// } else {
-	// grid.leave(curpos);
-	// grid.leave(newpos);
-	// cd.clear(curpos, newpos);
-	// }
-	// if (alley.isInAlley(curpos)) {
-	// alley.leave(no);
-	// }
-	// repair = true;
-	// }
-
-	// synchronized void restore() {
-	// if (!repair) {
-	// return;
-	// }
-	// repair = false;
-	// curpos = startpos;
-	// cd.mark(curpos, col, no);
-	// this.notifyAll();
-	// }
-
 }
 
 public class CarControl implements CarControlI {
@@ -370,22 +346,20 @@ public class CarControl implements CarControlI {
 			car[no].interrupt();//This will only work with AlleyMonitor
 			cd.println("Repairing car no " + no);
 		} else {
-			cd.println("Car no: " + no + " Already dead");
+			cd.println("Car no: " + no + " already out for repair");
 		}
 	}
 
 	public void restoreCar(int no) {
 		if (!car[no].alive) {
-			cd.println("Restoring");
 			synchronized (car[no]) {
-				cd.println("Enter sync");
 				car[no].alive = true;
 				cd.mark(car[no].curpos, car[no].col, no);
 				car[no].notify();
-				cd.println("Enter car no: " + no);
+				cd.println("Car no: " + no + " repaired");
 			}
 		} else {
-			cd.println("Car no " + no + " Already alive");
+			cd.println("Car no " + no + " already running");
 		}
 
 	}
