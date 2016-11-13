@@ -59,9 +59,7 @@ class Car extends Thread {
 	// static private AlleyMonitor alley = new AlleyMonitor();
 	static private Alley alley;
 
-	private final int STATE_STATIC = 1;
-	private final int STATE_MOVING = 2;
-	private int state = STATE_STATIC;
+	private boolean isMoving = false;
 
 	boolean repair = false;
 
@@ -159,7 +157,7 @@ class Car extends Thread {
 	}
 
 	private void driveLoop() throws InterruptedException {
-		state = STATE_STATIC;
+		isMoving = false;
 		while (true) {
 			sleep(speed());
 
@@ -195,7 +193,7 @@ class Car extends Thread {
 			// Move to new position
 			cd.clear(curpos);
 			cd.mark(curpos, newpos, col, no);
-			state = STATE_MOVING;
+			isMoving = true;
 			method.V();
 			sleep(speed());
 			method.P();
@@ -210,7 +208,7 @@ class Car extends Thread {
 			if (alley.isLeaving(oldpos, curpos))
 				alley.leave(no);
 			grid.free(oldpos);
-			state = STATE_STATIC;
+			isMoving = false;
 			method.V();
 		}
 		method.V();
@@ -237,15 +235,15 @@ class Car extends Thread {
 			return;
 		}
 		repair = true;
-		if (state == STATE_STATIC) {
-			cd.clear(curpos);
-		} else if (state == STATE_MOVING) {
+		if (isMoving) {
 			cd.clear(curpos, newpos);
+		} else {
+			cd.clear(curpos);
 		}
-		
+
 		alley.remove(no, curpos);
 		grid.remove(no);
-		
+
 		method.V();
 	}
 
