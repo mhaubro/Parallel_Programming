@@ -7,6 +7,7 @@ package mandat;
 //Hans Henrik Lovengreen    Oct 3, 2016
 
 import java.awt.Color;
+import java.util.Random;
 
 class Gate {
 
@@ -123,7 +124,8 @@ class Car extends Thread {
 	}
 
 	Color chooseColor() {
-		return Color.blue; // You can get any color, as longs as it's blue
+		// Having some more fun with colors...
+		return new Color((new Random()).nextInt(150)+100);
 	}
 
 	Pos nextPos(Pos pos) {
