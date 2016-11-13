@@ -34,7 +34,7 @@ public class Grid {
 
 		private int user = FREE;
 
-		private int repair = FREE;
+		private int repair_target = FREE;
 
 		private Semaphore method = new Semaphore(1);
 		private Semaphore wait = new Semaphore(0);
@@ -45,11 +45,8 @@ public class Grid {
 		public void enter(int n) throws InterruptedException {
 			while (true) {
 				method.P();
-				if (repair == n) {
-					// mark that the car has been removed from the grid.
-					repair = FREE;
-					break;
-				} else if (user == FREE) {
+				
+				if (user == FREE) {
 					user = n;
 					break;
 				}
@@ -58,6 +55,11 @@ public class Grid {
 				method.V();
 				wait.P();
 				waiting--;
+				
+				if (repair_target == n) {
+					notifyNext();
+					return;
+				}
 
 				// notify all who waits, before returning the critical region to
 				// method
@@ -87,7 +89,7 @@ public class Grid {
 			if (user == n) {
 				user = FREE;
 			} else {
-				repair = n;
+				repair_target = n;
 			}
 			notifyNext();
 		}
@@ -102,7 +104,7 @@ public class Grid {
 			} else {
 				// if the repair mark has not been found yet, it means that
 				// the car is not waiting in the location.
-				repair = FREE;
+				repair_target = FREE;
 				method.V();
 			}
 		}

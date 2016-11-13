@@ -5,12 +5,12 @@ public class AlleySemaphore extends Alley {
 	public AlleySemaphore(CarDisplayI display) {
 		super(display);
 	}
-	
+
 	private final int NO_CAR = -1;
 
 	private int count = 0; // how many cars in the alley.
 	private int waiting = 0;
-	private int repair_id = NO_CAR;
+	private int repair_target = NO_CAR;
 
 	private Semaphore method_semaphore = new Semaphore(1);
 	private Semaphore is_empty = new Semaphore(0);
@@ -32,14 +32,6 @@ public class AlleySemaphore extends Alley {
 		while (true) {
 			method_semaphore.P();
 
-			// if the car is set to be repaired, it will exit the method with
-			// false to signal that entering was not a succes.
-			if (repair_id == n) {
-				repair_id = NO_CAR;
-				method_semaphore.V();
-				return;
-			}
-
 			// checks if the car can enter the alley, by breaking the
 			// waiting-loop
 			if (count < 1) {
@@ -57,6 +49,14 @@ public class AlleySemaphore extends Alley {
 			waiting++;
 			method_semaphore.V();
 			is_empty.P();
+			waiting--;
+
+			// if the car is set to be repaired, it will exit the method with
+			// false to signal that entering was not a succes.
+			if (repair_target == n) {
+				notifyNext();
+				return;
+			}
 
 			/*
 			 * decrement the waiting counter, and check whether or not there are
@@ -65,13 +65,8 @@ public class AlleySemaphore extends Alley {
 			 * region will be left with the method semaphore, so everyone else
 			 * can continue.
 			 */
-			waiting--;
-			if (waiting > 0) {
-				is_empty.V();
-			} else {
-				repair_id = NO_CAR;
-				method_semaphore.V();
-			}
+
+			notifyNext();
 		}
 
 		/* The car has now entered the alley, and the counter is incremented */
@@ -93,14 +88,30 @@ public class AlleySemaphore extends Alley {
 
 	public void remove(int n, Pos position) throws InterruptedException {
 		method_semaphore.P();
+		if (isInAlley(position)) {
+			count--;
+			if (count < 1 && waiting > 0) {
+				is_empty.V();
+			} else {
+				method_semaphore.V(); // leave critical region
+			}
+		} else {
+			if (waiting > 0) {
+				repair_target = n;
+				is_empty.V();
+			} else {
+				method_semaphore.V();
+			}
+		}
+
+	}
+
+	private void notifyNext() {
 		if (waiting > 0) {
-			repair_id = n;
 			is_empty.V();
 		} else {
+			repair_target = NO_CAR;
 			method_semaphore.V();
-		}
-		if (isInAlley(position)){
-			leave(n);
 		}
 	}
 
