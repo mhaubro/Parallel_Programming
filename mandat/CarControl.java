@@ -298,7 +298,7 @@ public class CarControl implements CarControlI {
 
 	public CarControl(CarDisplayI cd) {
 		this.cd = cd;
-		barrier = new Barrier(false, cd);
+		barrier = new Barrier(false);
 		car = new Car[9];
 		gate = new Gate[9];
 		a = new AlleyMonitor();
