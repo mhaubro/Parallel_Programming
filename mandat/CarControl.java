@@ -137,6 +137,9 @@ class Car extends Thread {
 		return pos.equals(startpos);
 	}
 
+	/**
+	 * TODO comment
+	 */
 	public void run() {
 		try {
 
@@ -257,7 +260,7 @@ class Car extends Thread {
 	}
 
 	/**
-	 * 
+	 * TODO comment
 	 * @param isMoving2
 	 * @throws InterruptedException
 	 */
@@ -316,6 +319,9 @@ public class CarControl implements CarControlI {
 		gate[no].close();
 	}
 
+	/**
+	 * TODO comment
+	 */
 	public void barrierOn() {
 		boolean done = false;
 		while (!done) {
@@ -328,6 +334,9 @@ public class CarControl implements CarControlI {
 		}
 	}
 
+	/**
+	 * TODO comment
+	 */
 	public void barrierOff() {
 		boolean done = false;
 		while (!done) {
@@ -340,6 +349,9 @@ public class CarControl implements CarControlI {
 		}
 	}
 
+	/**
+	 * TODO comment
+	 */
 	public void barrierSet(int k) {
 		boolean done = false;
 		while (!done) {
@@ -352,6 +364,9 @@ public class CarControl implements CarControlI {
 		}
 	}
 
+	/**
+	 * TODO comment
+	 */
 	public void removeCar(int no) {
 		if (car[no].alive) {
 			car[no].interrupt();// This will only work with AlleyMonitor
@@ -361,6 +376,9 @@ public class CarControl implements CarControlI {
 		}
 	}
 
+	/**
+	 * TODO comment
+	 */
 	public void restoreCar(int no) {
 		if (!car[no].alive) {
 			synchronized (car[no]) {
