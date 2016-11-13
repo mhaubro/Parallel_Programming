@@ -46,6 +46,12 @@ class Gate {
 		e.V();
 	}
 
+	public void reset() {
+		g = new Semaphore(0);
+		e = new Semaphore(1);
+		isopen = false;
+	}
+
 }
 
 class Car extends Thread {
@@ -53,9 +59,9 @@ class Car extends Thread {
 	CarDisplayI cd; // GUI part
 
 	static private Grid grid = new Grid();
-	// static private AlleyMonitor alley = new AlleyMonitor();
-	static private Alley alley;
-	
+	static private AlleyMonitor alley;
+	// static private Alley alley;
+
 	boolean repair = false;
 
 	int basespeed = 100; // Rather: degree of slowness
@@ -71,10 +77,14 @@ class Car extends Thread {
 	Pos curpos; // Current position
 	Pos newpos; // New position to go to
 
+	boolean alive = true;
+
+	int interruptPosition;
+
 	public Car(int no, CarDisplayI cd, Gate g) {
 
 		// alley = new AlleyMonitor(display);
-		alley = new AlleySemaphore(cd);
+		alley = new AlleyMonitor(cd);
 
 		this.no = no;
 		this.cd = cd;
@@ -137,46 +147,94 @@ class Car extends Thread {
 			curpos = startpos;
 			cd.mark(curpos, col, no);
 
-			while (true) {
-				sleep(speed());
+			try {// Runs until it gets interrupted (Taken out for repair).
+					// If it is taken out for repair, then the thread will be
+					// broken down after the data has been reset.
+					// Then it will be restarted by a new thread. Therefore
+					// repairing is equiv. to killing a thread and starting a
+					// new.
+					// Note: Sleeps will always check for interrupts. Semaphores
+					// will not, if they can be grabbed. Therefore
+					// checkInterrupts();
+					// This has been done from the monitor-alley.
 
-				synchronized (this) {
-					while (repair){
-						this.wait();
+				while (true) {
+					interruptPosition = -1;
+					sleep(speed());// May throw interruptedexception
+
+					synchronized (this) {
+						interruptPosition = 0;
+
+						// while (repair) {
+						// this.wait();
+						// }
+						if (atGate(curpos)) {
+							mygate.pass();// May throw exception
+							speed = chooseSpeed();
+						}
+
+						// checkInterrupts();//Checks if theres been placed an
+						// interruptFlag. If there has - throws exception
+
+						if (CarControl.barrier.atBarrier(curpos, no)) {
+							interruptPosition = 1;
+							CarControl.barrier.sync();// Checks for
+														// interrupts.//May wait
+							// cd.println("Car " + no + " pass.");
+						}
+
+						newpos = nextPos(curpos);
+						// interruptPosition = 2;
+
+						// checkInterrupts();//Checks if theres been placed an
+						// interruptFlag
+
+						if (alley.isEntering(curpos, newpos)) {
+							interruptPosition = 2;
+							alley.enter(no);// May check for interrupts.//May
+											// wait
+						}
+						interruptPosition = 3;
+
+						grid.enter(newpos);// May check for interrupts.//May
+											// wait
+
+						interruptPosition = 4;
+
+						// Move to new position
+						cd.clear(curpos);
+						cd.mark(curpos, newpos, col, no);
+						sleep(speed());// Checks for interrupts. If the thread
+										// survives this, it survives an
+										// iteration
+
+						// interruptPosition = 5;
+
+						cd.clear(curpos, newpos);
+						cd.mark(newpos, col, no);
+
+						Pos oldpos = curpos;
+						curpos = newpos;
+						if (alley.isLeaving(oldpos, curpos)) {// Does not check
+																// for
+																// interrupts,
+																// no semaphores
+							// interruptPosition = 6;
+							alley.leave(no);// Does not check for interrupts, no
+											// semaphores
+						}
+						// interruptPosition = 7;
+						grid.leave(oldpos);// Does not check for interrupts, no
+											// semaphores
 					}
-					if (atGate(curpos)) {
-						mygate.pass();
-						speed = chooseSpeed();
-					}
 
-					if (CarControl.barrier.atBarrier(curpos, no)) {
-						CarControl.barrier.sync();
-						// cd.println("Car " + no + " pass.");
-					}
-
-					newpos = nextPos(curpos);
-
-					if (alley.isEntering(curpos, newpos))
-						alley.enter(no);
-					if (repair){
-						continue;
-					}
-					grid.enter(newpos);
-
-					// Move to new position
-					cd.clear(curpos);
-					cd.mark(curpos, newpos, col, no);
-					sleep(speed());
-
-					cd.clear(curpos, newpos);
-					cd.mark(newpos, col, no);
-
-					Pos oldpos = curpos;
-					curpos = newpos;
-					if (alley.isLeaving(oldpos, curpos))
-						alley.leave(no);
-					grid.leave(oldpos);
 				}
+
+			} catch (InterruptedException e) {// There's been an interrupt
+				alive = false;
+				repair(interruptPosition);
+				cd.println("Terminates thread " + no);
+				return;
 			}
 
 		} catch (Exception e) {
@@ -186,37 +244,65 @@ class Car extends Thread {
 		}
 	}
 
-	/**
-	 * removes a car
-	 * @throws InterruptedException 
-	 */
-	synchronized void remove() throws InterruptedException {
-		if (repair){
-			return;
+	void checkInterrupts() throws InterruptedException {
+		if (!Thread.currentThread().isInterrupted()) {// Checks if theres been
+														// placed an
+														// interruptFlag
+			throw new InterruptedException();
 		}
-		if (curpos == newpos) {
-			grid.leave(curpos);
-			cd.clear(curpos);
-		} else {
-			grid.leave(curpos);
+	}
+
+	void repair(int interruptLocation) {
+		grid.leave(curpos);// Leaves the grid
+		// cd.clear(curpos, newpos);
+
+		if (interruptLocation == 4) {// Is in two grid locations, curpos and
+										// newpos
 			grid.leave(newpos);
 			cd.clear(curpos, newpos);
+		} else {
+			cd.clear(curpos);
 		}
+
 		if (alley.isInAlley(curpos)) {
 			alley.leave(no);
 		}
-		repair = true;
+
+		mygate.reset();
 	}
-	
-	synchronized void restore(){
-		if(!repair){
-			return;
-		}
-		repair = false;
-		curpos = startpos;
-		cd.mark(curpos, col, no);
-		this.notifyAll();
-	}
+
+	/**
+	 * removes a car
+	 * 
+	 * @throws InterruptedException
+	 */
+	// synchronized void remove() throws InterruptedException {
+	// if (repair) {
+	// return;
+	// }
+	// if (curpos == newpos) {
+	// grid.leave(curpos);
+	// cd.clear(curpos);
+	// } else {
+	// grid.leave(curpos);
+	// grid.leave(newpos);
+	// cd.clear(curpos, newpos);
+	// }
+	// if (alley.isInAlley(curpos)) {
+	// alley.leave(no);
+	// }
+	// repair = true;
+	// }
+
+	// synchronized void restore() {
+	// if (!repair) {
+	// return;
+	// }
+	// repair = false;
+	// curpos = startpos;
+	// cd.mark(curpos, col, no);
+	// this.notifyAll();
+	// }
 
 }
 
@@ -285,16 +371,30 @@ public class CarControl implements CarControlI {
 	}
 
 	public void removeCar(int no) {
-		try {
-			car[no].remove();
-		} catch (InterruptedException e) {
-			cd.println("INTERUPTED EXCEPTION THROWN!!!");
-			e.printStackTrace();
+		if (car[no].alive) {
+			car[no].interrupt();
+			cd.println("Repairing car no " + no);
+		} else {
+			cd.println("Car no: " + no + " Already dead");
 		}
+		// try {
+		// car[no].remove();
+		// } catch (InterruptedException e) {
+		// cd.println("INTERUPTED EXCEPTION THROWN!!!");
+		// e.printStackTrace();
+		// }
 	}
 
 	public void restoreCar(int no) {
-		car[no].restore();
+		gate[no].close();
+		if (!car[no].alive) {
+			car[no] = new Car(no, cd, gate[no]);
+			car[no].start();
+			cd.println("Enter car no: " + no);
+		} else {
+			cd.println("Car no " + no + " Already alive");
+		}
+		gate[no].open();
 	}
 
 	/* Speed settings for testing purposes */
