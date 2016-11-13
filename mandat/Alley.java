@@ -22,9 +22,9 @@ public abstract class Alley {
 		alley_positions.add(new Pos(1, 1));
 		alley_positions.add(new Pos(1, 2));
 		
-		for (int i = 0; i < repair.length; i++){
-			repair[i] = false;
-		}
+//		for (int i = 0; i < repair.length; i++){
+//			repair[i] = false;
+//		}
 	}
 
 	public abstract void enter(int n) throws InterruptedException;
