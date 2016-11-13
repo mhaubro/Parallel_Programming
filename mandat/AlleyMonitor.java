@@ -35,4 +35,10 @@ public class AlleyMonitor extends Alley{
 		}
 	}
 
+	@Override
+	public void remove(int n, Pos position) throws InterruptedException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

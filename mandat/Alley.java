@@ -6,8 +6,6 @@ public abstract class Alley {
 
 	protected CarDisplayI display;
 	
-	protected boolean[] repair = new boolean[9];
-	
 	protected boolean dir = false; // true if up, false if down.
 	
 	// holds the layout of the alley, in the form of positions
@@ -22,14 +20,13 @@ public abstract class Alley {
 		alley_positions.add(new Pos(1, 1));
 		alley_positions.add(new Pos(1, 2));
 		
-		for (int i = 0; i < repair.length; i++){
-			repair[i] = false;
-		}
 	}
 
 	public abstract void enter(int n) throws InterruptedException;
 
 	public abstract void leave(int n) throws InterruptedException;
+	
+	public abstract void remove(int n, Pos position) throws InterruptedException;
 	
 	public boolean isEntering(Pos current, Pos next) {
 		return isInAlley(next) && !isInAlley(current);

@@ -5,9 +5,12 @@ public class AlleySemaphore extends Alley {
 	public AlleySemaphore(CarDisplayI display) {
 		super(display);
 	}
+	
+	private final int NO_CAR = -1;
 
 	private int count = 0; // how many cars in the alley.
 	private int waiting = 0;
+	private int repair_id = NO_CAR;
 
 	private Semaphore method_semaphore = new Semaphore(1);
 	private Semaphore is_empty = new Semaphore(0);
@@ -31,8 +34,8 @@ public class AlleySemaphore extends Alley {
 
 			// if the car is set to be repaired, it will exit the method with
 			// false to signal that entering was not a succes.
-			if (repair[n]) {
-				repair[n] = false;
+			if (repair_id == n) {
+				repair_id = NO_CAR;
 				method_semaphore.V();
 				return;
 			}
@@ -66,6 +69,7 @@ public class AlleySemaphore extends Alley {
 			if (waiting > 0) {
 				is_empty.V();
 			} else {
+				repair_id = NO_CAR;
 				method_semaphore.V();
 			}
 		}
@@ -87,13 +91,16 @@ public class AlleySemaphore extends Alley {
 		}
 	}
 
-	public void remove(int n) throws InterruptedException {
+	public void remove(int n, Pos position) throws InterruptedException {
 		method_semaphore.P();
-		repair[n] = true;
 		if (waiting > 0) {
+			repair_id = n;
 			is_empty.V();
 		} else {
 			method_semaphore.V();
+		}
+		if (isInAlley(position)){
+			leave(n);
 		}
 	}
 

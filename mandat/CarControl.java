@@ -52,10 +52,17 @@ class Car extends Thread {
 
 	CarDisplayI cd; // GUI part
 
+	private Semaphore method = new Semaphore(1);
+	private Semaphore repair_sem = new Semaphore(0);
+
 	static private Grid grid = new Grid();
 	// static private AlleyMonitor alley = new AlleyMonitor();
 	static private Alley alley;
-	
+
+	private final int STATE_STATIC = 1;
+	private final int STATE_MOVING = 2;
+	private int state = STATE_STATIC;
+
 	boolean repair = false;
 
 	int basespeed = 100; // Rather: degree of slowness
@@ -138,84 +145,120 @@ class Car extends Thread {
 			cd.mark(curpos, col, no);
 
 			while (true) {
-				sleep(speed());
-
-				synchronized (this) {
-					while (repair){
-						this.wait();
-					}
-					if (atGate(curpos)) {
-						mygate.pass();
-						speed = chooseSpeed();
-					}
-
-					if (CarControl.barrier.atBarrier(curpos, no)) {
-						CarControl.barrier.sync();
-						// cd.println("Car " + no + " pass.");
-					}
-
-					newpos = nextPos(curpos);
-
-					if (alley.isEntering(curpos, newpos))
-						alley.enter(no);
-					if (repair){
-						continue;
-					}
-					grid.enter(newpos);
-
-					// Move to new position
-					cd.clear(curpos);
-					cd.mark(curpos, newpos, col, no);
-					sleep(speed());
-
-					cd.clear(curpos, newpos);
-					cd.mark(newpos, col, no);
-
-					Pos oldpos = curpos;
-					curpos = newpos;
-					if (alley.isLeaving(oldpos, curpos))
-						alley.leave(no);
-					grid.leave(oldpos);
-				}
+				driveLoop();
+				repairWait();
 			}
 
-		} catch (Exception e) {
+		} catch (
+
+		Exception e) {
 			cd.println("Exception in Car no. " + no);
 			System.err.println("Exception in Car no. " + no + ":" + e);
 			e.printStackTrace();
 		}
 	}
 
+	private void driveLoop() throws InterruptedException {
+		state = STATE_STATIC;
+		while (true) {
+			sleep(speed());
+
+			method.P();
+			if (repair)
+				break;
+
+			if (atGate(curpos)) {
+				mygate.pass();
+				speed = chooseSpeed();
+			}
+
+			if (CarControl.barrier.atBarrier(curpos, no)) {
+				CarControl.barrier.sync();
+				// cd.println("Car " + no + " pass.");
+			}
+
+			newpos = nextPos(curpos);
+
+			if (alley.isEntering(curpos, newpos)) {
+				method.V();
+				alley.enter(no);
+				method.P();
+				if (repair)
+					break;
+			}
+			method.V();
+			grid.enter(newpos, no);
+			method.P();
+			if (repair)
+				break;
+
+			// Move to new position
+			cd.clear(curpos);
+			cd.mark(curpos, newpos, col, no);
+			state = STATE_MOVING;
+			method.V();
+			sleep(speed());
+			method.P();
+			if (repair)
+				break;
+
+			cd.clear(curpos, newpos);
+			cd.mark(newpos, col, no);
+
+			Pos oldpos = curpos;
+			curpos = newpos;
+			if (alley.isLeaving(oldpos, curpos))
+				alley.leave(no);
+			grid.free(oldpos);
+			state = STATE_STATIC;
+			method.V();
+		}
+		method.V();
+	}
+
+	private void repairWait() throws InterruptedException {
+
+		if (repair) {
+			repair_sem.P();
+			method.V();
+		}
+
+	}
+
 	/**
 	 * removes a car
-	 * @throws InterruptedException 
+	 * 
+	 * @throws InterruptedException
 	 */
-	synchronized void remove() throws InterruptedException {
-		if (repair){
+	void remove() throws InterruptedException {
+		method.P();
+		if (repair) {
+			method.V();
 			return;
-		}
-		if (curpos == newpos) {
-			grid.leave(curpos);
-			cd.clear(curpos);
-		} else {
-			grid.leave(curpos);
-			grid.leave(newpos);
-			cd.clear(curpos, newpos);
-		}
-		if (alley.isInAlley(curpos)) {
-			alley.leave(no);
 		}
 		repair = true;
-	}
-	
-	synchronized void restore(){
-		if(!repair){
-			return;
+		if (state == STATE_STATIC) {
+			cd.clear(curpos);
+		} else if (state == STATE_MOVING) {
+			cd.clear(curpos, newpos);
 		}
-		repair = false;
-		curpos = startpos;
-		cd.mark(curpos, col, no);
-		this.notifyAll();
+		
+		alley.remove(no, curpos);
+		grid.remove(no);
+		
+		method.V();
+	}
+
+	void restore() throws InterruptedException {
+		method.P();
+		if (!repair) {
+			method.V();
+		} else {
+			repair = false;
+			curpos = startpos;
+			cd.mark(curpos, col, no);
+			repair_sem.V();
+		}
 	}
 
 }
@@ -294,7 +337,12 @@ public class CarControl implements CarControlI {
 	}
 
 	public void restoreCar(int no) {
-		car[no].restore();
+		try {
+			car[no].restore();
+		} catch (InterruptedException e) {
+			cd.println("INTERUPTED EXCEPTION THROWN!!!");
+			e.printStackTrace();
+		}
 	}
 
 	/* Speed settings for testing purposes */
