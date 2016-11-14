@@ -325,7 +325,8 @@ public class CarControl implements CarControlI {
 		boolean done = false;
 		while (!done) {
 			try {
-				barrier.on();
+				barrier.on();//This method should never fail, thus making it not busy wait
+				//Only possible error is if someone decides to interrupt the thread that uses the buttons
 				done = true;
 			} catch (InterruptedException e) {
 				System.err.println("Barrier set on interrupted. trying again.");
@@ -340,7 +341,8 @@ public class CarControl implements CarControlI {
 		boolean done = false;
 		while (!done) {
 			try {
-				barrier.off();
+				barrier.off();//This method should never fail, thus making it not busy wait
+				//Only possible error is if someone decides to interrupt the thread that uses the buttons
 				done = true;
 			} catch (InterruptedException e) {
 				System.err.println("Barrier set off interrupted. trying again.");

@@ -302,7 +302,6 @@ public class CarControl implements CarControlI {
 		car = new Car[9];
 		gate = new Gate[9];
 		a = new AlleyMonitor();
-		// a = new AlleySemaphore();
 
 		for (int no = 0; no < 9; no++) {
 			gate[no] = new Gate();
@@ -320,13 +319,14 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Turns on barrier
+	 * Turns on the barrier
 	 */
 	public void barrierOn() {
 		boolean done = false;
 		while (!done) {
 			try {
-				barrier.on();
+				barrier.on();//This method should never fail, thus making it not busy wait
+				//Only possible error is if someone decides to interrupt the thread that uses the buttons
 				done = true;
 			} catch (InterruptedException e) {
 				System.err.println("Barrier set on interrupted. trying again.");
@@ -335,13 +335,14 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Turns off barrier
+	 * Turns off the barrier
 	 */
 	public void barrierOff() {
 		boolean done = false;
 		while (!done) {
 			try {
-				barrier.off();
+				barrier.off();//This method should never fail, thus making it not busy wait
+				//Only possible error is if someone decides to interrupt the thread that uses the buttons
 				done = true;
 			} catch (InterruptedException e) {
 				System.err.println("Barrier set off interrupted. trying again.");
@@ -349,6 +350,10 @@ public class CarControl implements CarControlI {
 		}
 	}
 
+	/**
+	 * Sets the threshold for the barrier
+	 * @param n The new threshold
+	 */
 	public void barrierSet(int k) {
 		boolean done = false;
 		while (!done) {
@@ -362,12 +367,12 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Takes a car out for repair
+	 * Removes a car for repair
 	 * @param no The car taken out
 	 */
 	public void removeCar(int no) {
 		if (car[no].alive) {
-			car[no].interrupt();// This will only work with AlleyMonitor
+			car[no].interrupt();// This will only work with AlleyMonitor.
 			cd.println("Repairing car no " + no);
 		} else {
 			cd.println("Car no: " + no + " already out for repair");
@@ -375,12 +380,13 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Restores a car
-	 * @param no The restored car
+	 * Restores a car from repair
+	 * @param no The car being restored
 	 */
 	public void restoreCar(int no) {
-		if (!car[no].alive) {
-			synchronized (car[no]) {
+		if (!car[no].alive) {//Since it is only a read, this doesn't need to be in sync.
+			synchronized (car[no]) {//Makes sure that a car is not in its critical section, since
+				//car[no].alive is set. //This might be unnecessary
 				car[no].alive = true;
 				cd.mark(car[no].curpos, car[no].col, no);
 				car[no].notify();
