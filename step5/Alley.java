@@ -21,7 +21,7 @@ public abstract class Alley {
 	 */
 	public Alley() {
 		// define alley positions
-		for (int i = 1; i <= 10; i++) {
+		for (int i = 1; i <= 9; i++) {
 			alley_positions.add(new Pos(i, 0));
 		}
 		alley_positions.add(new Pos(1, 1));
