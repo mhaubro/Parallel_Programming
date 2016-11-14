@@ -1,4 +1,4 @@
-package mandat;
+package step4;
 //Prototype implementation of Car Control
 
 //Mandatory assignment
@@ -298,10 +298,11 @@ public class CarControl implements CarControlI {
 
 	public CarControl(CarDisplayI cd) {
 		this.cd = cd;
-		barrier = new Barrier(false);
+		barrier = new BarrierMonitor(false);
 		car = new Car[9];
 		gate = new Gate[9];
 		a = new AlleyMonitor();
+		// a = new AlleySemaphore();
 
 		for (int no = 0; no < 9; no++) {
 			gate[no] = new Gate();
@@ -348,52 +349,22 @@ public class CarControl implements CarControlI {
 		}
 	}
 
-	/**
-	 * Sets the threshold for the barrier
-	 * @param n The new threshold
-	 */
 	public void barrierSet(int k) {
-		boolean done = false;
-		while (!done) {
-			try {
-				barrier.setThreshold(k);
-				done = true;
-			} catch (InterruptedException e) {
-				System.err.println("Barrier set threshold interrupted. trying again.");
-			}
+		cd.println("Barrier threshold setting not implemented in this version");
+		// This sleep is for illustrating how blocking affects the GUI
+		// Remove when feature is properly implemented.
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
 		}
 	}
 
-	/**
-	 * Removes a car for repair
-	 * @param no The car taken out
-	 */
 	public void removeCar(int no) {
-		if (car[no].alive) {
-			car[no].interrupt();// This will only work with AlleyMonitor.
-			cd.println("Repairing car no " + no);
-		} else {
-			cd.println("Car no: " + no + " already out for repair");
-		}
+		cd.println("Remove Car not implemented in this version");
 	}
 
-	/**
-	 * Restores a car from repair
-	 * @param no The car being restored
-	 */
 	public void restoreCar(int no) {
-		if (!car[no].alive) {//Since it is only a read, this doesn't need to be in sync.
-			synchronized (car[no]) {//Makes sure that a car is not in its critical section, since
-				//car[no].alive is set. //This might be unnecessary
-				car[no].alive = true;
-				cd.mark(car[no].curpos, car[no].col, no);
-				car[no].notify();
-				cd.println("Car no: " + no + " repaired");
-			}
-		} else {
-			cd.println("Car no " + no + " already running");
-		}
-
+		cd.println("Restore Car not implemented in this version");
 	}
 
 	/* Speed settings for testing purposes */

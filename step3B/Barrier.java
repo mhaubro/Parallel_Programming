@@ -1,4 +1,4 @@
-package mandat;
+package step3B;
 
 public class Barrier {
 	/** The amount of cars the barrier should open for */
@@ -63,9 +63,7 @@ public class Barrier {
 			if (++waiting < threshold) {// If there are less cars waiting than
 										// the threshold.
 				method.V();
-				try {//Try/catch is to allow deletion of cars.
 				wait.P();// Wait until there are threshold cars waiting
-				} catch (InterruptedException e){removedCar();throw new InterruptedException();}
 				waiting--;// Decrements waiting, since it has received a
 							// go-signal.
 				released++;
@@ -181,9 +179,6 @@ public class Barrier {
 			}
 		}
 	}
-	public void removedCar(){
-		//A car is removed. Since cars in sync only can edit variables while in wait.P();, and
-		//only waiting++; has happened before, this is short.
-		waiting--;
-	}
+	
+
 }

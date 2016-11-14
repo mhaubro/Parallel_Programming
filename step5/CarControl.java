@@ -1,4 +1,4 @@
-package mandat;
+package step5;
 //Prototype implementation of Car Control
 
 //Mandatory assignment
@@ -302,6 +302,7 @@ public class CarControl implements CarControlI {
 		car = new Car[9];
 		gate = new Gate[9];
 		a = new AlleyMonitor();
+		// a = new AlleySemaphore();
 
 		for (int no = 0; no < 9; no++) {
 			gate[no] = new Gate();
@@ -319,7 +320,7 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Turns on the barrier
+	 * Turns on barrier
 	 */
 	public void barrierOn() {
 		boolean done = false;
@@ -334,7 +335,7 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Turns off the barrier
+	 * Turns off barrier
 	 */
 	public void barrierOff() {
 		boolean done = false;
@@ -348,10 +349,6 @@ public class CarControl implements CarControlI {
 		}
 	}
 
-	/**
-	 * Sets the threshold for the barrier
-	 * @param n The new threshold
-	 */
 	public void barrierSet(int k) {
 		boolean done = false;
 		while (!done) {
@@ -365,12 +362,12 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Removes a car for repair
+	 * Takes a car out for repair
 	 * @param no The car taken out
 	 */
 	public void removeCar(int no) {
 		if (car[no].alive) {
-			car[no].interrupt();// This will only work with AlleyMonitor.
+			car[no].interrupt();// This will only work with AlleyMonitor
 			cd.println("Repairing car no " + no);
 		} else {
 			cd.println("Car no: " + no + " already out for repair");
@@ -378,13 +375,12 @@ public class CarControl implements CarControlI {
 	}
 
 	/**
-	 * Restores a car from repair
-	 * @param no The car being restored
+	 * Restores a car
+	 * @param no The restored car
 	 */
 	public void restoreCar(int no) {
-		if (!car[no].alive) {//Since it is only a read, this doesn't need to be in sync.
-			synchronized (car[no]) {//Makes sure that a car is not in its critical section, since
-				//car[no].alive is set. //This might be unnecessary
+		if (!car[no].alive) {
+			synchronized (car[no]) {
 				car[no].alive = true;
 				cd.mark(car[no].curpos, car[no].col, no);
 				car[no].notify();
