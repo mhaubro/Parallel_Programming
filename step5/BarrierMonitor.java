@@ -89,6 +89,7 @@ public class BarrierMonitor extends Barrier {
 
 	/** This method is not implemented, and reacts by doing nothing */
 	public synchronized void setThreshold(int k) throws InterruptedException {
+		System.out.println("Using Monitor for Semaphore-implementation exclusive method");
 	}
 
 }
