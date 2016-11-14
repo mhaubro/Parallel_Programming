@@ -1,7 +1,5 @@
 package step3;
 
-import java.util.ArrayList;
-
 /**
  * This class implements the alley from step 1.
  * @author Martin og Mathias

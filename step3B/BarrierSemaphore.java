@@ -1,16 +1,10 @@
 package step3B;
 
-public class BarrierSemaphore {
-	/** The amount of cars the barrier should open for */
-	private int threshold = 9;
+public class BarrierSemaphore extends Barrier{
 
 	/** Indicates whether the @see #threshold has been changed */
 	private boolean threshold_change = false;
-
-	/** Indicates whether the barrier is turned on */
-	private boolean isOn;
-
-	private int waiting = 0;
+	
 	private int released = 0;
 
 	/**
@@ -32,7 +26,7 @@ public class BarrierSemaphore {
 	 *            Indicated whether the barrier is turned on.
 	 */
 	public BarrierSemaphore(boolean isOn) {
-		this.isOn = isOn;
+		super(isOn);
 	}
 
 	/**
@@ -127,19 +121,7 @@ public class BarrierSemaphore {
 	 * 
 	 * @return Whether the car is located right in front of the barrier
 	 */
-	public boolean atBarrier(Pos current, int N) {
 
-		// checks if the x-coordinate is within the barrier.
-		if (current.col < 3)
-			return false;
-
-		if (N < 5) { // cars going up
-			return (current.row == 6);
-		} else { // cars going down
-			return (current.row == 5);
-
-		}
-	}
 
 	/**
 	 * Implements a setter for the threshold

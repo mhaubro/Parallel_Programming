@@ -12,9 +12,6 @@ public abstract class Barrier {
 	/** The amount of cars the barrier should open for */
 	protected int threshold = 9;
 
-	/** Indicates whether the @see #threshold has been changed */
-	protected boolean threshold_change = false;
-
 	/** Indicates whether the barrier is turned on */
 	protected boolean isOn;
 
@@ -39,19 +36,6 @@ public abstract class Barrier {
 	 * 
 	 * @throws InterruptedException
 	 *             if interrupted while doing a semaphore.P()-operation.
-	 *
-	 * Strategy of the method: Enter the critical region and indicate that
-	 * you're waiting. Start wait by wait.V(); If you are the n'th car waiting,
-	 * indicate that you are not waiting, and start a cascade of notifications
-	 * to the waiting cars doing wait.V(); When the cars are released, if a car
-	 * sees that it is the last on released, it will stop the cascade. If there
-	 * are more cars waiting, a notification is sent to the next. All this is
-	 * done in critical regions.
-	 * 
-	 * Please note that only threshold cars will be sent off, since the whole
-	 * function is a critical region (method.P()) Due to this, when threshold
-	 * cars hit the barrier, they will be sent off, and no more cars will be
-	 * sent off with them.
 	 */
 	public abstract void sync() throws InterruptedException;
 
@@ -80,7 +64,4 @@ public abstract class Barrier {
 
 		}
 	}
-
-	public abstract void setThreshold(int k) throws InterruptedException;
-
 }

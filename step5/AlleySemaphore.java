@@ -1,26 +1,12 @@
 package step5;
 
 /**
- * AlleySemaphore is a implementation of Alley, using semaphores for the
- * synchronization. Extends the Alley object.
- * 
- * @author Martin and Mathias
- *
+ * This class implements the alley from step 1.
+ * @author Martin og Mathias
  */
 public class AlleySemaphore extends Alley {
 
-	/** Constructs a AlleySemaphore object. */
-	public AlleySemaphore() {
-		super();
-	}
-
-	/** how many cars is in the alley */
-	private int count = 0;
-
-	/** how many cars is waiting to enter the alley. */
-	private int waiting = 0;
-
-	// both semaphores is a way of entering the same critical region. witch
+	// both semaphores is a way of entering the same critical region. which
 	// results in a kind of wait- or method-state.
 	/**
 	 * semaphore used for standard entering of the critical region in method
@@ -31,12 +17,16 @@ public class AlleySemaphore extends Alley {
 	private Semaphore wait = new Semaphore(0);
 
 	/**
-	 * Enter will block until the car n has succesfuly entered the alley.
-	 * 
+	 * Initializes the Alley with predefined positions 
+	 */
+	public AlleySemaphore() {
+		super();
+	}
+
+	/**
+	 * Enters the alley as the car with id equals n
 	 * @param n
-	 *            n is the identity of the car, who is entering.
-	 * @throws InterruptedException,
-	 *             can be thrown if the semaphores is interrupted.
+	 * @throws InterruptedException
 	 */
 	public void enter(int n) throws InterruptedException {
 		// the car will repeatedly check if it can enter the alley, and if not,
@@ -97,5 +87,6 @@ public class AlleySemaphore extends Alley {
 			method_semaphore.V(); // leave critical region
 		}
 	}
+
 
 }

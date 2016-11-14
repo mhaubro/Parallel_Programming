@@ -1,4 +1,4 @@
-package step4;
+package step3;
 
 /**
  * Barrier is an abstract class, used to simplify the implementation and shifting
@@ -45,8 +45,6 @@ public abstract class Barrier {
 	/** Turns off the barrier. @throws InterruptedException */
 	public abstract void off() throws InterruptedException;
 
-	public abstract void setThreshold(int k) throws InterruptedException;
-	
 	/**
 	 * Checks if car n is in front of the barrier @param current Position of the
 	 * car, @param n Number of the car
@@ -66,9 +64,4 @@ public abstract class Barrier {
 
 		}
 	}
-
-
-
-
-
 }

@@ -11,6 +11,13 @@ import java.util.ArrayList;
  */
 public abstract class Alley {
 
+	/** how many cars is in the alley */
+	protected int count = 0;
+
+	/** how many cars is waiting to enter the alley. */
+	protected int waiting = 0;
+	
+	/** Indicates the direction of the alley, true if up, false if down*/
 	protected boolean dir = false; // true if up, false if down.
 
 	// holds the layout of the alley, in the form of positions
