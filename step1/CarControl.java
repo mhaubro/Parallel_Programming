@@ -60,7 +60,7 @@ class Car extends Thread {
 
 	static private Grid grid = new Grid();
 
-	static private Alley alley;
+	static private AlleySemaphore alley;
 
 	int basespeed = 100; // Rather: degree of slowness
 	int variation = 50; // Percentage of base speed
@@ -75,7 +75,7 @@ class Car extends Thread {
 	Pos curpos; // Current position
 	Pos newpos; // New position to go to
 
-	public Car(int no, CarDisplayI cd, Gate g, Alley a) {
+	public Car(int no, CarDisplayI cd, Gate g, AlleySemaphore a) {
 
 		alley = a;
 
@@ -207,13 +207,13 @@ public class CarControl implements CarControlI {
 	CarDisplayI cd; // Reference to GUI
 	Car[] car; // Cars
 	Gate[] gate; // Gates
-	Alley a;//Alley
+	AlleySemaphore a;//Alley
 
 	public CarControl(CarDisplayI cd) {
 		this.cd = cd;
 		car = new Car[9];
 		gate = new Gate[9];
-		a = new Alley();
+		a = new AlleySemaphore();
 
 		for (int no = 0; no < 9; no++) {
 			gate[no] = new Gate();

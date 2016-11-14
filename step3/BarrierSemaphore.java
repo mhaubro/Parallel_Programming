@@ -1,6 +1,6 @@
 package step3;
 
-public class Barrier {
+public class BarrierSemaphore {
 	/** The amount of cars the barrier should open for */
 	private int threshold = 9;
 
@@ -23,7 +23,7 @@ public class Barrier {
 	 * @param isOn
 	 *            Indicated whether the barrier is turned on.
 	 */
-	public Barrier(boolean isOn) {
+	public BarrierSemaphore(boolean isOn) {
 		this.isOn = isOn;
 	}
 
