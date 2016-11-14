@@ -4,9 +4,6 @@ public class Barrier {
 	/** The amount of cars the barrier should open for */
 	private int threshold = 9;
 
-	/** Indicates whether the @see #threshold has been changed */
-	private boolean threshold_change = false;
-
 	/** Indicates whether the barrier is turned on */
 	private boolean isOn;
 
@@ -63,7 +60,7 @@ public class Barrier {
 				waiting--;// Decrements waiting, since it has received a
 							// go-signal.
 
-				if (waiting > 0 || threshold_change) {
+				if (waiting > 0) {
 					wait.V();// Signals another waiting car
 					return;// Starts. By signaling the other car, the baton has
 							// been passed.
