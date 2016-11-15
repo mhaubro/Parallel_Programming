@@ -82,7 +82,8 @@ public class BarrierSemaphore extends Barrier{
 					released = 0;
 
 					if ((threshold_change)) {// Signals the threshold after the
-						threshold_signal.V();// cars are done.						
+						threshold_signal.V();// cars are done.
+						return;
 					}
 				}
 			} else {// This car breaks the treshold barrier, starting a cascade.
